@@ -15,6 +15,8 @@ describe("createDocument", () => {
       {
         index: 0,
         text: "hello world",
+        startOffset: 0,
+        endOffset: 11,
       },
     ]);
     expect(document.title).toBe("RAG notes");
@@ -34,10 +36,14 @@ describe("createDocument", () => {
     expect(document.chunks[0]).toEqual({
       index: 0,
       text: "a".repeat(500),
+      startOffset: 0,
+      endOffset: 500,
     });
     expect(document.chunks[1]).toEqual({
       index: 1,
       text: "a".repeat(150),
+      startOffset: 450,
+      endOffset: 600,
     });
   });
 });

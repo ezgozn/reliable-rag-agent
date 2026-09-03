@@ -14,6 +14,8 @@ type CreateDocumentInput = {
 type DocumentChunk = {
   index: number;
   text: string;
+  startOffset: number;
+  endOffset: number;
 };
 
 type CreatedDocument = {
@@ -27,15 +29,31 @@ type CreatedDocument = {
 const documents: CreatedDocument[] = [];
 
 export function createDocument(input: CreateDocumentInput): CreatedDocument {
+  const rawChunks = chunkText(input.content, {
+    chunkSize: DEFAULT_CHUNK_SIZE,
+    overlap: DEFAULT_CHUNK_OVERLAP,
+  });
+
+  const step = DEFAULT_CHUNK_SIZE - DEFAULT_CHUNK_OVERLAP;
+
+  const chunks = rawChunks.map((text, index) => {
+    const startOffset = index * step;
+    const endOffset = startOffset + text.length;
+
+    return {
+      index,
+      text,
+      startOffset,
+      endOffset,
+    };
+  });
+
   const document = {
     id: `doc_${randomUUID()}`,
     title: input.title,
     content: input.content,
     contentLength: input.content.length,
-    chunks: chunkText(input.content, {
-      chunkSize: DEFAULT_CHUNK_SIZE,
-      overlap: DEFAULT_CHUNK_OVERLAP,
-    }).map((text, index) => ({ index, text })),
+    chunks,
   };
 
   documents.push(document);

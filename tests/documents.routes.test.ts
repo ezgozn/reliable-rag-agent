@@ -18,6 +18,8 @@ describe("documents routes", () => {
       {
         index: 0,
         text: "hello world",
+        startOffset: 0,
+        endOffset: 11,
       },
     ]);
   });
@@ -50,6 +52,8 @@ describe("documents routes", () => {
       {
         index: 0,
         text: "This should be retrievable",
+        startOffset: 0,
+        endOffset: 26,
       },
     ]);
   });
