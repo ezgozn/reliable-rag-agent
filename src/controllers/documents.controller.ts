@@ -11,7 +11,7 @@ const createDocumentSchema = z.object({
   content: z.string().trim().min(1),
 });
 
-export const createDocumentHandler: RequestHandler = (req, res, next) => {
+export const createDocumentHandler: RequestHandler = async (req, res, next) => {
   const result = createDocumentSchema.safeParse(req.body);
 
   if (!result.success) {
@@ -24,7 +24,7 @@ export const createDocumentHandler: RequestHandler = (req, res, next) => {
 
   const { title, content } = result.data;
 
-  const document = createDocument({ title, content });
+  const document = await createDocument({ title, content });
 
   res.status(201).json(document);
 };

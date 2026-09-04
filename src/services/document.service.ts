@@ -4,7 +4,9 @@ import {
   DEFAULT_CHUNK_SIZE,
   DEFAULT_CHUNK_OVERLAP,
 } from "../config/rag.config.js";
+import { createEmbedding } from "./embedding.service.js";
 import { chunkText } from "../utils/chunkText.js";
+import { addVector } from "../store/vector.store.js";
 
 type CreateDocumentInput = {
   title: string;
@@ -16,6 +18,7 @@ type DocumentChunk = {
   text: string;
   startOffset: number;
   endOffset: number;
+  embedding: number[];
 };
 
 type CreatedDocument = {
@@ -28,7 +31,9 @@ type CreatedDocument = {
 
 const documents: CreatedDocument[] = [];
 
-export function createDocument(input: CreateDocumentInput): CreatedDocument {
+export async function createDocument(
+  input: CreateDocumentInput
+): Promise<CreatedDocument> {
   const rawChunks = chunkText(input.content, {
     chunkSize: DEFAULT_CHUNK_SIZE,
     overlap: DEFAULT_CHUNK_OVERLAP,
@@ -36,15 +41,17 @@ export function createDocument(input: CreateDocumentInput): CreatedDocument {
 
   const step = DEFAULT_CHUNK_SIZE - DEFAULT_CHUNK_OVERLAP;
 
-  const chunks = rawChunks.map((text, index) => {
+  const chunks = rawChunks.map(async (text, index) => {
     const startOffset = index * step;
     const endOffset = startOffset + text.length;
+    const embedding = await createEmbedding(text);
 
     return {
       index,
       text,
       startOffset,
       endOffset,
+      embedding,
     };
   });
 
@@ -53,8 +60,17 @@ export function createDocument(input: CreateDocumentInput): CreatedDocument {
     title: input.title,
     content: input.content,
     contentLength: input.content.length,
-    chunks,
+    chunks: await Promise.all(chunks),
   };
+
+  for (const chunk of document.chunks) {
+    addVector({
+      documentId: document.id,
+      chunkIndex: chunk.index,
+      text: chunk.text,
+      embedding: chunk.embedding,
+    });
+  }
 
   documents.push(document);
 
